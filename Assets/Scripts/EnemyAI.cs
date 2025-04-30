@@ -3,34 +3,58 @@ using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
+    [Header("Status do Inimigo")]
     public float health = 100f;
+    public int xpValue = 25;
+
+    [Header("Detecção e Ataque")]
     public float detectionRange = 15f;
     public float attackRange = 7f;
     public float fireRate = 1.5f;
+
+    [Header("Projétil")]
     public GameObject projectilePrefab;
     public Transform firePoint;
     public float projectileSpeed = 15f;
 
+    [Header("Drop de Vida")]
+    public GameObject healthPickupPrefab;
+    [Range(0f, 1f)]
+    public float dropChance = 0.3f; // 30% de chance
+
+    [Header("Knockback")]
+    public float knockbackForce = 5f;
+    public float knockbackDuration = 1f;
+
     private Transform player;
     private NavMeshAgent agent;
+    private Rigidbody rb;
     private float fireCooldown = 0f;
-    public int xpValue = 25;
-
-
-    public GameObject healthPickupPrefab;
-[Range(0f, 1f)]
-public float dropChance = 0.3f; // 30% de chance
-
+    private bool isKnockedBack = false;
+    private float knockbackTimer = 0f;
 
     void Start()
     {
         player = GameObject.FindGameObjectWithTag("Player").transform;
         agent = GetComponent<NavMeshAgent>();
+        rb = GetComponent<Rigidbody>();
     }
 
     void Update()
     {
         if (player == null) return;
+
+        // Se está em knockback, contar o tempo e não atacar
+        if (isKnockedBack)
+        {
+            knockbackTimer -= Time.deltaTime;
+            if (knockbackTimer <= 0f)
+            {
+                isKnockedBack = false;
+                agent.enabled = true;
+            }
+            return; // Impede ações durante o knockback
+        }
 
         float distance = Vector3.Distance(transform.position, player.position);
 
@@ -50,7 +74,7 @@ public float dropChance = 0.3f; // 30% de chance
         }
         else
         {
-            agent.isStopped = true; // Para caso o jogador fuja da detecção
+            agent.isStopped = true;
         }
 
         fireCooldown -= Time.deltaTime;
@@ -68,39 +92,54 @@ public float dropChance = 0.3f; // 30% de chance
     {
         if (fireCooldown <= 0f)
         {
-            // Criar o projétil na posição do firePoint
             GameObject projectile = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
-            Rigidbody rb = projectile.GetComponent<Rigidbody>();
+            Rigidbody rbProj = projectile.GetComponent<Rigidbody>();
 
-            if (rb != null)
+            if (rbProj != null)
             {
-                // A direção do projétil será dada pela rotação do firePoint
-                rb.velocity = firePoint.forward * projectileSpeed; // Usa a direção do firePoint
+                rbProj.velocity = firePoint.forward * projectileSpeed;
             }
 
             fireCooldown = fireRate;
         }
     }
 
-   public void TakeDamage(float damage)
-{
-    health -= damage;
-    if (health <= 0f)
+    public void TakeDamage(float damage)
     {
-        // Adiciona um ponto de score quando o inimigo morre
-        FindObjectOfType<UIManager>().AddScore(1);
+        health -= damage;
 
-        // Sorteia se vai dropar a vida
-        if (Random.value <= dropChance && healthPickupPrefab != null)
+        if (health <= 0f)
         {
-            Instantiate(healthPickupPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
+            FindObjectOfType<UIManager>().AddScore(1);
+
+            if (Random.value <= dropChance && healthPickupPrefab != null)
+            {
+                Instantiate(healthPickupPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
+            }
+
+            FindObjectOfType<PlayerXP>().GainXP(xpValue);
+
+            Destroy(gameObject);
         }
-
-        // Aqui não chamamos mais o evento de level up. Apenas ganha XP.
-        FindObjectOfType<PlayerXP>().GainXP(xpValue);
-
-        Destroy(gameObject); // Destroi o inimigo
+        else
+        {
+            ApplyKnockback(); // Aplica knockback quando ainda está vivo
+        }
     }
-}
 
+    void ApplyKnockback()
+    {
+        if (rb == null || player == null) return;
+
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+
+        agent.enabled = false; // Desativa NavMeshAgent durante o knockback
+
+        Vector3 direction = (transform.position - player.position).normalized;
+        direction.y = 0f;
+
+        rb.velocity = Vector3.zero;
+        rb.AddForce(direction * knockbackForce, ForceMode.Impulse);
+    }
 }

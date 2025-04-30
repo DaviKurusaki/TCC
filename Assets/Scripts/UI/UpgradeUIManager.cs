@@ -38,20 +38,20 @@ public GameObject upgradePanel2; // Segundo painel de upgrade
         iceButton.onClick.AddListener(() => SelectMagic("Ice"));
         lightningButton.onClick.AddListener(() => SelectMagic("Lightning"));
 
-        // Atribui os eventos aos botões de upgrades
+      /*   // Atribui os eventos aos botões de upgrades
         upgrade1Button.onClick.AddListener(() => SelectUpgrade(1)); // Aumento de dano
         upgrade2Button.onClick.AddListener(() => SelectUpgrade(2)); // Aumento de velocidade
-        upgrade3Button.onClick.AddListener(() => SelectUpgrade(3)); // Aumento de vida
+        upgrade3Button.onClick.AddListener(() => SelectUpgrade(3)); // Aumentode vida  */
 
         // Escuta o evento de level up e exibe o painel correspondente
         PlayerXP.onLevelUp += ShowUpgradePanel;
     }
 
-    void OnDestroy()
+   /*  void OnDestroy()
     {
         // Remove a inscrição do evento corretamente
         PlayerXP.onLevelUp -= ShowUpgradePanel;
-    }
+    } */
 
     void ShowUpgradePanel()
 {
@@ -112,7 +112,7 @@ public GameObject upgradePanel2; // Segundo painel de upgrade
         ShowPanel(1);
     }
 
-    void SelectUpgrade(int upgradeType)
+   /*  void SelectUpgrade(int upgradeType)
     {
         // Lógica para os upgrades
         switch (upgradeType)
@@ -137,5 +137,5 @@ public GameObject upgradePanel2; // Segundo painel de upgrade
             panel.SetActive(false);
         }
         Time.timeScale = 1f;
-    }
+    } */
 }

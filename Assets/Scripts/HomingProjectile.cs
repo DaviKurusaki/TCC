@@ -5,14 +5,32 @@ public class HomingProjectile : MonoBehaviour
     public float speed = 20f;
     public float lifeTime = 5f;
     public float areaRadius = 5f;
-    private float damage;  // Agora o dano será ajustado dinamicamente
+
+    private float damage;
     private Transform target;
     private string projectileType;
+    private Vector3 straightDirection = Vector3.zero;
+    private bool directionInitialized = false;
 
     public void SetTarget(Transform newTarget, string type)
     {
         target = newTarget;
         projectileType = type;
+    }
+
+    public void SetStraightDirection(Vector3 direction)
+    {
+        straightDirection = direction.normalized;
+    }
+
+    public void SetDamage(float newDamage)
+    {
+        damage = newDamage;
+    }
+
+    public void SetSpeed(float newSpeed)
+    {
+        speed = newSpeed;
     }
 
     void Start()
@@ -22,21 +40,33 @@ public class HomingProjectile : MonoBehaviour
 
     void Update()
     {
-        if (target == null)
+        if (target != null)
         {
-            Destroy(gameObject);
+            Vector3 direction = (target.position - transform.position).normalized;
+            transform.Translate(direction * speed * Time.deltaTime, Space.World);
+            directionInitialized = true;
+        }
+        else if (straightDirection != Vector3.zero)
+        {
+            transform.Translate(straightDirection * speed * Time.deltaTime, Space.World);
+            directionInitialized = true;
+        }
+        else if (!directionInitialized)
+        {
+            // Aguarda o primeiro frame para receber a direção
             return;
         }
-
-        Vector3 direction = (target.position - transform.position).normalized;
-        transform.Translate(direction * speed * Time.deltaTime, Space.World);
+        else
+        {
+            Destroy(gameObject); // Nenhum alvo e nenhuma direção definida
+        }
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Enemy"))
         {
-            if (projectileType == "Fire" || projectileType == "Ice")
+            if (projectileType == "Fire")
             {
                 ApplyAreaDamage(transform.position);
             }
@@ -45,8 +75,7 @@ public class HomingProjectile : MonoBehaviour
                 EnemyAI enemy = other.GetComponent<EnemyAI>();
                 if (enemy != null)
                 {
-                    // Aplique o dano do projétil somado ao dano do objeto do inimigo
-                    enemy.TakeDamage(damage);  
+                    enemy.TakeDamage(damage);
                 }
             }
             Destroy(gameObject);
@@ -63,21 +92,9 @@ public class HomingProjectile : MonoBehaviour
                 EnemyAI enemy = hitCollider.GetComponent<EnemyAI>();
                 if (enemy != null)
                 {
-                    enemy.TakeDamage(damage); 
+                    enemy.TakeDamage(damage);
                 }
             }
         }
-    }
-
-    // Método para definir o dano dinamicamente
-    public void SetDamage(float newDamage)
-    {
-        damage = newDamage;
-    }
-
-    // Método para definir a velocidade dinamicamente
-    public void SetSpeed(float newSpeed)
-    {
-        speed = newSpeed;
     }
 }

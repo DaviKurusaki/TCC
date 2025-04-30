@@ -2,52 +2,180 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
+
+    [Header("UI Config")]
+    public MagicAmmoUI magicAmmoUI;
+
+    // ------------------------------
+    // Código da distância (Pistola)
+    // ------------------------------
+    [Header("Pistol")]
+    public GameObject pistolObject;  // Objeto da varinha
     public enum MageType { Basic, Fire, Ice, Lightning }
     public MageType currentMage = MageType.Basic;
+
+    [Header("Bullet Type")]
 
     public GameObject basicProjectile;
     public GameObject fireProjectile;
     public GameObject iceProjectile;
     public GameObject lightningProjectile;
 
-    public Transform firePoint;  // Posição de disparo do projétil
+    [Header("Fire Point Aim")]
+    public Transform firePoint;
+
+    [Header("Projectile Settings")]
     public float missileSpeed = 10f;
     public float detectionRadius = 15f;
+    public float projectileDamage = 5f;
+    public float projectileSpeed = 10f;
 
-    public float projectileDamage = 5f;  // Dano do projétil
-    public float projectileSpeed = 10f;  // Velocidade do projétil
+    [Header("Magic Ammo System")]
+    public int maxMagicAmmo = 6;
+    public int currentMagicAmmo;
+    public float ammoRegenInterval = 1f;
+    private float ammoRegenTimer;
+
+
+    // ------------------------------
+    // Código para a espada (Melee)
+    // ------------------------------
+    [Header("Melee")]
+
+    public GameObject swordObject; // Objeto da espada
+
+    public enum WeaponType { Magic, Melee }
+    public WeaponType currentWeapon = WeaponType.Magic;
+
+    public float meleeRange = 2f;     // Alcance do ataque com espada
+    public float meleeDamage = 10f;   // Dano da espada
+
+    // ------------------------------
+    // Código para armas guardadas
+    // ------------------------------
+    [Header("Sheated Weapons Objects")]
+    public GameObject BackSwordObject; // Objeto da espada nas costas
+    public GameObject BackPistolObject; // Objeto da espada nas costas
+
+    void Start()
+    {
+        currentMagicAmmo = maxMagicAmmo;
+        ammoRegenTimer = 0f;
+    }
 
     void Update()
     {
+
+        // Regen de mana/munição mágica
+        if (currentWeapon == WeaponType.Magic && currentMagicAmmo < maxMagicAmmo)
+        {
+            ammoRegenTimer += Time.deltaTime;
+            if (ammoRegenTimer >= ammoRegenInterval)
+            {
+                currentMagicAmmo++;
+                ammoRegenTimer = 0f;
+                UpdateAmmoUI(); // atualiza no canvas
+            }
+        }
+
+
+
+
+        // Troca de arma (botão direito do mouse)
+        if (Input.GetMouseButtonDown(1))
+        {
+            ToggleWeapon();
+        }
+
+        // Ataque (botão esquerdo do mouse)
         if (Input.GetButtonDown("Fire1"))
         {
-            // Encontra o inimigo mais próximo
-            Transform nearestEnemy = GetNearestEnemyInRange();
-
-            // Obtém o projétil com base no tipo de magia atual
-            GameObject projectileToShoot = GetProjectileByType();
-
-            // Instancia o projétil na posição do firePoint e com a rotação do player
-            GameObject projectile = Instantiate(projectileToShoot, firePoint.position, Quaternion.LookRotation(firePoint.forward));
-
-            // Verifica se o projétil tem o componente HomingProjectile
-            HomingProjectile homingProjectile = projectile.GetComponent<HomingProjectile>();
-
-            // Se o projétil for homing e o inimigo estiver presente
-            if (homingProjectile != null && nearestEnemy != null)
+            if (currentWeapon == WeaponType.Magic)
             {
-                homingProjectile.SetTarget(nearestEnemy, currentMage.ToString());
+                ShootMagic();
+            }
+            else if (currentWeapon == WeaponType.Melee)
+            {
+                PerformMeleeAttack();
+            }
+        }
+    }
 
-                // Ajusta o dano e a velocidade do projétil com base nos upgrades
-                homingProjectile.SetDamage(projectileDamage);
-                homingProjectile.SetSpeed(projectileSpeed);
+    void ToggleWeapon()
+    {
+        if (currentWeapon == WeaponType.Magic)
+        {
+            currentWeapon = WeaponType.Melee;
+            pistolObject.SetActive(false);
+            swordObject.SetActive(true);
+            BackPistolObject.SetActive(true);
+            BackSwordObject.SetActive(false);
+        }
+        else
+        {
+            currentWeapon = WeaponType.Magic;
+            pistolObject.SetActive(true);
+            swordObject.SetActive(false);
+            BackPistolObject.SetActive(false);
+            BackSwordObject.SetActive(true);
+        }
+    }
+
+    void ShootMagic()
+    {
+
+       if (currentMagicAmmo <= 0)
+        return;
+
+    currentMagicAmmo--;
+    UpdateAmmoUI();
+
+    Transform nearestEnemy = GetNearestEnemyInRange();
+    GameObject projectileToShoot = GetProjectileByType();
+
+    GameObject projectile = Instantiate(projectileToShoot, firePoint.position, Quaternion.LookRotation(firePoint.forward));
+    HomingProjectile homingProjectile = projectile.GetComponent<HomingProjectile>();
+
+    if (homingProjectile != null)
+    {
+        homingProjectile.SetDamage(projectileDamage);
+        homingProjectile.SetSpeed(projectileSpeed);
+
+        if (nearestEnemy != null)
+        {
+            homingProjectile.SetTarget(nearestEnemy, currentMage.ToString());
+        }
+        else
+        {
+            // Caso não tenha alvo, projétil segue em linha reta
+            homingProjectile.SetTarget(null, currentMage.ToString());
+             homingProjectile.SetStraightDirection(firePoint.forward);
+        }
+    }
+    }
+
+    void PerformMeleeAttack()
+    {
+        // Faz o ataque em área com base no alcance da espada (meleeRange)
+        Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward, meleeRange);
+
+        foreach (Collider enemy in hitEnemies)
+        {
+            if (enemy.CompareTag("Enemy"))
+            {
+                // Obtém o componente EnemyAI, onde a função TakeDamage está localizada
+                EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+                if (enemyAI != null)
+                {
+                    // Aplica o dano ao inimigo
+                    enemyAI.TakeDamage(meleeDamage);
+                }
             }
         }
     }
 
     GameObject GetProjectileByType()
     {
-        // Retorna o projétil de acordo com o tipo de magia
         switch (currentMage)
         {
             case MageType.Fire:
@@ -57,13 +185,12 @@ public class PlayerAttack : MonoBehaviour
             case MageType.Lightning:
                 return lightningProjectile;
             default:
-                return basicProjectile; // Magia básica
+                return basicProjectile;
         }
     }
 
     Transform GetNearestEnemyInRange()
     {
-        // Encontra o inimigo mais próximo no alcance de detecção
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         Transform closest = null;
         float shortestDistance = detectionRadius;
@@ -83,20 +210,37 @@ public class PlayerAttack : MonoBehaviour
 
     public void SetMageType(MageType newType)
     {
-        // Altera o tipo de magia
         currentMage = newType;
     }
 
-    // Métodos para aplicar os upgrades
-    public void UpgradeDamage(float addedDamage)
+    // Gizmo para visualizar o raio da espada no editor
+    void OnDrawGizmosSelected()
     {
-        projectileDamage += addedDamage;  // Aumenta o dano do projétil
-        Debug.Log("Dano do projétil aumentado para: " + projectileDamage);
+        if (currentWeapon == WeaponType.Melee)
+        {
+            Gizmos.color = Color.red;
+            Vector3 attackOrigin = transform.position + transform.forward * 1f;
+            Gizmos.DrawWireSphere(attackOrigin, meleeRange);
+        }
     }
 
-    public void UpgradeSpeed(float addedSpeed)
+    public bool IsUsingMagic()
     {
-        missileSpeed += addedSpeed;  // Aumenta a velocidade do projétil
-        Debug.Log("Velocidade do projétil aumentada para: " + missileSpeed);
+        return currentWeapon == WeaponType.Magic;
     }
+
+    public bool IsUsingMelee()
+    {
+        return currentWeapon == WeaponType.Melee;
+    }
+
+    void UpdateAmmoUI()
+    {
+        if (magicAmmoUI != null)
+        {
+            magicAmmoUI.UpdateAmmoDisplay(currentMagicAmmo, maxMagicAmmo);
+        }
+    }
+
+
 }
