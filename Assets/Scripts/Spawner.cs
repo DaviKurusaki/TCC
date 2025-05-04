@@ -12,6 +12,12 @@ public class Spawner : MonoBehaviour
         public float spawnChance;
     }
 
+    [Header("Objetos de Recompensa")]
+    public GameObject FirePickup;
+    public GameObject IcePickup;
+    public GameObject LightningPickup;
+
+
     [Header("Partícula de Spawn")]
     public GameObject efeitoParticulas;
     public float delay = 2f;
@@ -43,6 +49,19 @@ public class Spawner : MonoBehaviour
 
     void Update()
     {
+        if (currentWave == 2)
+        {
+            FirePickup.SetActive(true);
+        }
+        if (currentWave == 3)
+        {
+            IcePickup.SetActive(true);
+        }
+        if (currentWave == 4)
+        {
+            LightningPickup.SetActive(true);
+        }
+
         currentEnemies.RemoveAll(enemy => enemy == null);
 
         if (currentEnemies.Count == 0 && !isSpawning)
@@ -85,11 +104,8 @@ public class Spawner : MonoBehaviour
                 currentEnemies.Add(enemy);
             }
         }
-        WaveRewardSpawner rewardSpawner = FindObjectOfType<WaveRewardSpawner>();
-        if (rewardSpawner != null)
-        {
-            rewardSpawner.SpawnRewardForWave(currentWave);
-        }
+
+        
 
         isSpawning = false;
     }
@@ -115,7 +131,7 @@ public class Spawner : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         GameObject boss = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
-        currentEnemies.Add(boss);  // Para só encerrar quando o boss morrer
+        currentEnemies.Add(boss);
         Debug.Log("Boss spawned!");
     }
 

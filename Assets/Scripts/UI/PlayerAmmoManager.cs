@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerAmmoManager : MonoBehaviour
@@ -13,6 +14,15 @@ public class PlayerAmmoManager : MonoBehaviour
 
     private int currentIndex = 0;
     private PlayerAttack.MageType[] mageTypes;
+
+    // Enum para representar os tipos de magia (ammo)
+    public enum AmmoType
+    {
+        Basic,
+        Fire,
+        Ice,
+        Lightning
+    }
 
     void Start()
     {
@@ -65,5 +75,18 @@ public class PlayerAmmoManager : MonoBehaviour
         // Atualiza na UI
         if (magicUI != null)
             magicUI.SetMage(chosen, unlockedMagias);
+    }
+
+    // Método para desbloquear magias (ammo)
+    internal void UnlockAmmo(AmmoType ammoType)
+    {
+        // Marca o tipo de magia como desbloqueado
+        unlockedMagias[(int)ammoType] = true;
+
+        // Atualiza a UI após desbloquear a magia
+        magicUI.SetMage(mageTypes[currentIndex], unlockedMagias);
+
+        // Aqui pode ser adicionado um efeito sonoro ou visual, se necessário
+        Debug.Log($"Magia {ammoType} desbloqueada!");
     }
 }

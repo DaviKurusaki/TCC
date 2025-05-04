@@ -19,7 +19,7 @@ public class WaveRewardSpawner : MonoBehaviour
             if (reward.waveNumber == wave)
             {
                 Instantiate(reward.rewardPrefab, reward.spawnPoint.position, Quaternion.identity);
-                Debug.Log($"Spawnou recompensa da wave {wave}");
+        
             }
         }
     }
