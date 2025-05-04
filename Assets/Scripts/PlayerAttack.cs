@@ -2,7 +2,6 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
-
     [Header("UI Config")]
     [SerializeField] private MagicAmmoUI magicAmmoUI;
 
@@ -10,12 +9,11 @@ public class PlayerAttack : MonoBehaviour
     // Código da distância (Pistola)
     // ------------------------------
     [Header("Pistol")]
-    public GameObject pistolObject;  // Objeto da varinha
+    public GameObject pistolObject;  // Objeto da pistola
     public enum MageType { Basic, Fire, Ice, Lightning }
     public MageType currentMage = MageType.Basic;
 
     [Header("Bullet Type")]
-
     public GameObject basicProjectile;
     public GameObject fireProjectile;
     public GameObject iceProjectile;
@@ -36,14 +34,11 @@ public class PlayerAttack : MonoBehaviour
     public float ammoRegenInterval = 1f;
     private float ammoRegenTimer;
 
-
     // ------------------------------
     // Código para a espada (Melee)
     // ------------------------------
     [Header("Melee")]
-
     public GameObject swordObject; // Objeto da espada
-
     public enum WeaponType { Magic, Melee }
     public WeaponType currentWeapon = WeaponType.Magic;
 
@@ -53,7 +48,7 @@ public class PlayerAttack : MonoBehaviour
     // ------------------------------
     // Código para armas guardadas
     // ------------------------------
-    [Header("Sheated Weapons Objects")]
+    [Header("Sheathed Weapons Objects")]
     public GameObject BackSwordObject; // Objeto da espada nas costas
     public GameObject BackPistolObject; // Objeto da espada nas costas
 
@@ -68,7 +63,6 @@ public class PlayerAttack : MonoBehaviour
 
     void Update()
     {
-
         // Regen de mana/munição mágica
         if (currentWeapon == WeaponType.Magic && currentMagicAmmo < maxMagicAmmo)
         {
@@ -80,9 +74,6 @@ public class PlayerAttack : MonoBehaviour
                 UpdateAmmoUI(); // atualiza no canvas
             }
         }
-
-
-
 
         // Troca de arma (botão direito do mouse)
         if (Input.GetMouseButtonDown(1))
@@ -126,55 +117,66 @@ public class PlayerAttack : MonoBehaviour
 
     void ShootMagic()
     {
+        if (currentMagicAmmo <= 0)
+            return;
 
-       if (currentMagicAmmo <= 0)
-        return;
+        currentMagicAmmo--;
+        UpdateAmmoUI();
 
-    currentMagicAmmo--;
-    UpdateAmmoUI();
+        Transform nearestEnemy = GetNearestEnemyInRange();
+        GameObject projectileToShoot = GetProjectileByType();
 
-    Transform nearestEnemy = GetNearestEnemyInRange();
-    GameObject projectileToShoot = GetProjectileByType();
+        GameObject projectile = Instantiate(projectileToShoot, firePoint.position, Quaternion.LookRotation(firePoint.forward));
+        HomingProjectile homingProjectile = projectile.GetComponent<HomingProjectile>();
 
-    GameObject projectile = Instantiate(projectileToShoot, firePoint.position, Quaternion.LookRotation(firePoint.forward));
-    HomingProjectile homingProjectile = projectile.GetComponent<HomingProjectile>();
-
-    if (homingProjectile != null)
-    {
-        homingProjectile.SetDamage(projectileDamage);
-        homingProjectile.SetSpeed(projectileSpeed);
-
-        if (nearestEnemy != null)
+        if (homingProjectile != null)
         {
-            homingProjectile.SetTarget(nearestEnemy, currentMage.ToString());
-        }
-        else
-        {
-            // Caso não tenha alvo, projétil segue em linha reta
-            homingProjectile.SetTarget(null, currentMage.ToString());
-             homingProjectile.SetStraightDirection(firePoint.forward);
-        }
-    }
-    }
+            homingProjectile.SetDamage(projectileDamage);
+            homingProjectile.SetSpeed(projectileSpeed);
 
-   void PerformMeleeAttack()
-{
-    // Faz o ataque em área com base no alcance da espada (meleeRange)
-    Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward, meleeRange);
-
-    foreach (Collider enemy in hitEnemies)
-    {
-        if (enemy.CompareTag("Enemy"))
-        {
-            IDamageable damageable = enemy.GetComponentInParent<IDamageable>();
-            if (damageable != null)
+            if (nearestEnemy != null)
             {
-                damageable.TakeDamage(meleeDamage);
+                homingProjectile.SetTarget(nearestEnemy, currentMage.ToString());
+            }
+            else
+            {
+                // Caso não tenha alvo, projétil segue em linha reta
+                homingProjectile.SetTarget(null, currentMage.ToString());
+                homingProjectile.SetStraightDirection(firePoint.forward);
             }
         }
-    }
-}
 
+        // Corrigir a rotação do jogador para olhar na direção do ataque
+        if (nearestEnemy != null)
+        {
+            Vector3 directionToFace = (nearestEnemy.position - transform.position).normalized;
+            Quaternion rotation = Quaternion.LookRotation(new Vector3(directionToFace.x, 0, directionToFace.z));
+            transform.rotation = rotation;
+        }
+    }
+
+    void PerformMeleeAttack()
+    {
+        // Faz o ataque em área com base no alcance da espada (meleeRange)
+        Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward, meleeRange);
+
+        foreach (Collider enemy in hitEnemies)
+        {
+            if (enemy.CompareTag("Enemy"))
+            {
+                IDamageable damageable = enemy.GetComponentInParent<IDamageable>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage(meleeDamage);
+                }
+            }
+        }
+
+        // Corrigir a rotação do jogador para olhar na direção do ataque
+        Vector3 directionToFace = transform.forward;
+        Quaternion rotation = Quaternion.LookRotation(new Vector3(directionToFace.x, 0, directionToFace.z));
+        transform.rotation = rotation;
+    }
 
     GameObject GetProjectileByType()
     {
@@ -213,7 +215,7 @@ public class PlayerAttack : MonoBehaviour
     public void SetMageType(MageType newType)
     {
         currentMage = newType;
-         UpdateAmmoUI();
+        UpdateAmmoUI();
     }
 
     // Gizmo para visualizar o raio da espada no editor
@@ -237,15 +239,11 @@ public class PlayerAttack : MonoBehaviour
         return currentWeapon == WeaponType.Melee;
     }
 
-   public void UpdateAmmoUI()
+    public void UpdateAmmoUI()
     {
         if (MagicAmmoUI != null)
         {
             MagicAmmoUI.UpdateAmmoDisplay(currentMagicAmmo, maxMagicAmmo);
         }
     }
-
-
 }
-
-

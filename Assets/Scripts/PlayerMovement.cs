@@ -3,21 +3,15 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
 {
-    [Header("Movement Settings")]
-    public float speed = 7f;                // Velocidade normal
-
-    [Header("Dash Settings")]
-    public float dashSpeed = 20f;           // Velocidade durante o dash
-    public float dashDuration = 0.2f;       // Duração do dash em segundos
-    public float dashCooldown = 1f;         // Tempo mínimo entre dashes
+    public Animator animator;           // Arraste seu Animator aqui no Inspector
+    public float speed = 7f;            // Velocidade normal do jogador
+    public float dashSpeed = 20f;       // Velocidade durante o dash
+    public float dashDuration = 0.2f;   // Duração do dash
+    public float dashCooldown = 1f;     // Tempo mínimo entre dashes
     private float dashTimeLeft = 0f;
     private float dashCooldownTimer = 0f;
     private bool isDashing = false;
     private Vector3 dashDirection;
-
-    [Header("Dust Particle")]
-    public ParticleSystem dashDustPrefab;   // Prefab da partícula de poeira
-    public Vector3 dustOffset = new Vector3(0f, 0.1f, 0f);
 
     private Rigidbody rb;
     private Vector3 moveDirection;
@@ -29,12 +23,16 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // 1) Ler input de movimento
+        // 1) Ler input de movimento (WASD ou Setas)
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
         moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
 
-        // 2) Atualizar timers
+        // 2) Verificar se o jogador está se movendo e atualizar o parâmetro IsRunning
+        bool isMoving = moveDirection.magnitude > 0.1f;
+        animator.SetBool("IsRunning", isMoving);  // Atualiza o parâmetro IsRunning no Animator
+
+        // 3) Atualizar timers do dash
         if (dashCooldownTimer > 0f)
             dashCooldownTimer -= Time.deltaTime;
 
@@ -46,10 +44,8 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // 3) Iniciar dash se Shift e tiver direção e cooldown zerado
-            if (Input.GetKeyDown(KeyCode.LeftShift)
-                && moveDirection.sqrMagnitude > 0.01f
-                && dashCooldownTimer <= 0f)
+            // 4) Iniciar dash se pressionar Shift, movimento estiver ativo e cooldown expirado
+            if (Input.GetKeyDown(KeyCode.LeftShift) && isMoving && dashCooldownTimer <= 0f)
             {
                 StartDash();
             }
@@ -64,10 +60,14 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            rb.velocity = moveDirection * speed;
+            // 5) Movimento normal com velocidade ajustada
+            Vector3 velocity = moveDirection * speed;
+            velocity.y = rb.velocity.y; // Mantém a gravidade funcionando
+            rb.velocity = velocity;
         }
     }
 
+    // Iniciar o dash
     private void StartDash()
     {
         isDashing = true;
@@ -79,27 +79,12 @@ public class PlayerMovement : MonoBehaviour
 
         // Mantém a direção atual de movimento
         dashDirection = moveDirection;
-
-        // Gera a partícula de poeira ATRÁS do jogador
-        if (dashDustPrefab != null)
-        {
-            Vector3 behindOffset = -dashDirection * dustOffset.z 
-                                   + Vector3.up * dustOffset.y;
-            Vector3 spawnPos = transform.position + behindOffset;
-
-            ParticleSystem dust = Instantiate(dashDustPrefab, spawnPos, Quaternion.identity);
-            dust.transform.forward = -dashDirection;
-            var main = dust.main;
-            dust.Play();
-            Destroy(dust.gameObject, main.duration + main.startLifetime.constantMax);
-        }
     }
 
+    // Finaliza o dash
     private void EndDash()
     {
         isDashing = false;
-
-        // Reabilita colisões
         rb.detectCollisions = true;
     }
 }
