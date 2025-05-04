@@ -33,11 +33,7 @@ public GameObject upgradePanel2; // Segundo painel de upgrade
             panel.SetActive(false);
         }
 
-        // Atribui os eventos aos botões de seleção de magia
-        fireButton.onClick.AddListener(() => SelectMagic("Fire"));
-        iceButton.onClick.AddListener(() => SelectMagic("Ice"));
-        lightningButton.onClick.AddListener(() => SelectMagic("Lightning"));
-
+    
       /*   // Atribui os eventos aos botões de upgrades
         upgrade1Button.onClick.AddListener(() => SelectUpgrade(1)); // Aumento de dano
         upgrade2Button.onClick.AddListener(() => SelectUpgrade(2)); // Aumento de velocidade
@@ -92,26 +88,10 @@ public GameObject upgradePanel2; // Segundo painel de upgrade
 }
 
 
-    void SelectMagic(string type)
-    {
-        // Altera o tipo de magia com base na escolha do jogador
-        switch (type)
-        {
-            case "Fire":
-                playerAttack.SetMageType(PlayerAttack.MageType.Fire);
-                break;
-            case "Ice":
-                playerAttack.SetMageType(PlayerAttack.MageType.Ice);
-                break;
-            case "Lightning":
-                playerAttack.SetMageType(PlayerAttack.MageType.Lightning);
-                break;
-        }
+  //
 
         // Exibe o painel de upgrade 1 (nível 3) após a seleção de magia
-        ShowPanel(1);
-    }
-
+   //
    /*  void SelectUpgrade(int upgradeType)
     {
         // Lógica para os upgrades

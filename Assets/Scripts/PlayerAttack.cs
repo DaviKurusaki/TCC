@@ -4,7 +4,7 @@ public class PlayerAttack : MonoBehaviour
 {
 
     [Header("UI Config")]
-    public MagicAmmoUI magicAmmoUI;
+    [SerializeField] private MagicAmmoUI magicAmmoUI;
 
     // ------------------------------
     // Código da distância (Pistola)
@@ -57,10 +57,13 @@ public class PlayerAttack : MonoBehaviour
     public GameObject BackSwordObject; // Objeto da espada nas costas
     public GameObject BackPistolObject; // Objeto da espada nas costas
 
+    public MagicAmmoUI MagicAmmoUI { get => magicAmmoUI; set => magicAmmoUI = value; }
+
     void Start()
     {
         currentMagicAmmo = maxMagicAmmo;
         ammoRegenTimer = 0f;
+        UpdateAmmoUI();
     }
 
     void Update()
@@ -154,25 +157,24 @@ public class PlayerAttack : MonoBehaviour
     }
     }
 
-    void PerformMeleeAttack()
-    {
-        // Faz o ataque em área com base no alcance da espada (meleeRange)
-        Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward, meleeRange);
+   void PerformMeleeAttack()
+{
+    // Faz o ataque em área com base no alcance da espada (meleeRange)
+    Collider[] hitEnemies = Physics.OverlapSphere(transform.position + transform.forward, meleeRange);
 
-        foreach (Collider enemy in hitEnemies)
+    foreach (Collider enemy in hitEnemies)
+    {
+        if (enemy.CompareTag("Enemy"))
         {
-            if (enemy.CompareTag("Enemy"))
+            IDamageable damageable = enemy.GetComponentInParent<IDamageable>();
+            if (damageable != null)
             {
-                // Obtém o componente EnemyAI, onde a função TakeDamage está localizada
-                EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
-                if (enemyAI != null)
-                {
-                    // Aplica o dano ao inimigo
-                    enemyAI.TakeDamage(meleeDamage);
-                }
+                damageable.TakeDamage(meleeDamage);
             }
         }
     }
+}
+
 
     GameObject GetProjectileByType()
     {
@@ -211,6 +213,7 @@ public class PlayerAttack : MonoBehaviour
     public void SetMageType(MageType newType)
     {
         currentMage = newType;
+         UpdateAmmoUI();
     }
 
     // Gizmo para visualizar o raio da espada no editor
@@ -234,13 +237,15 @@ public class PlayerAttack : MonoBehaviour
         return currentWeapon == WeaponType.Melee;
     }
 
-    void UpdateAmmoUI()
+   public void UpdateAmmoUI()
     {
-        if (magicAmmoUI != null)
+        if (MagicAmmoUI != null)
         {
-            magicAmmoUI.UpdateAmmoDisplay(currentMagicAmmo, maxMagicAmmo);
+            MagicAmmoUI.UpdateAmmoDisplay(currentMagicAmmo, maxMagicAmmo);
         }
     }
 
 
 }
+
+

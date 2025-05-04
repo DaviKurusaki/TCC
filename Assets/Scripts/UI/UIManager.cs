@@ -28,4 +28,13 @@ public class UIManager : MonoBehaviour
         wave = waveNumber;
         waveText.text = "Wave " + wave;
     }
+
+public void NextWave()
+{
+    wave++;
+    waveText.text = "Wave " + wave;
+}
+
+
+
 }

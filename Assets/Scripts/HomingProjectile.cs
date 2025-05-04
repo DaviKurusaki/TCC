@@ -63,38 +63,41 @@ public class HomingProjectile : MonoBehaviour
     }
 
     void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Enemy"))
     {
-        if (other.CompareTag("Enemy"))
+        if (projectileType == "Fire")
         {
-            if (projectileType == "Fire")
-            {
-                ApplyAreaDamage(transform.position);
-            }
-            else
-            {
-                EnemyAI enemy = other.GetComponent<EnemyAI>();
-                if (enemy != null)
-                {
-                    enemy.TakeDamage(damage);
-                }
-            }
-            Destroy(gameObject);
+            ApplyAreaDamage(transform.position);
         }
+        else
+        {
+            IDamageable damageable = other.GetComponentInParent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(damage);
+            }
+        }
+
+        Destroy(gameObject);
     }
+}
+
 
     void ApplyAreaDamage(Vector3 impactPosition)
+{
+    Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
+    foreach (var hitCollider in hitColliders)
     {
-        Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
-        foreach (var hitCollider in hitColliders)
+        if (hitCollider.CompareTag("Enemy"))
         {
-            if (hitCollider.CompareTag("Enemy"))
+            IDamageable damageable = hitCollider.GetComponent<IDamageable>();
+            if (damageable != null)
             {
-                EnemyAI enemy = hitCollider.GetComponent<EnemyAI>();
-                if (enemy != null)
-                {
-                    enemy.TakeDamage(damage);
-                }
+                damageable.TakeDamage(damage);
             }
         }
     }
+}
+
 }

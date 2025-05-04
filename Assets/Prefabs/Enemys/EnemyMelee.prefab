@@ -12,11 +12,11 @@ GameObject:
   - component: {fileID: 3926324175313859571}
   - component: {fileID: 30800751257353364}
   - component: {fileID: 7203953419151175952}
-  - component: {fileID: 909228869845074220}
+  - component: {fileID: 6535507086248707655}
   - component: {fileID: 148400264648637316}
   - component: {fileID: -1166663851064019467}
   m_Layer: 0
-  m_Name: Enemy1
+  m_Name: EnemyMelee
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -67,7 +67,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4f4593881fdad9f48b3ebace6974648b, type: 2}
+  - {fileID: 2100000, guid: 498cb1832fd32fa4f986c4108ca64fd6, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -112,7 +112,7 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &909228869845074220
+--- !u!114 &6535507086248707655
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,21 +121,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 778070227127783267}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1742166941c4fb649b82c4140a47ea1d, type: 3}
+  m_Script: {fileID: 11500000, guid: e45b05e328bef334eb97bb5ad6924b38, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 100
-  xpValue: 25
+  health: 60
+  xpValue: 0
+  attackDamage: 5
+  attackCooldown: 2
+  movementSpeed: 5
   detectionRange: 200
-  attackRange: 10
-  fireRate: 2
-  projectilePrefab: {fileID: 574750843465924099, guid: f62d4b53523ee0f408f802727d4a4cfd, type: 3}
-  firePoint: {fileID: 8343920651329156774}
-  projectileSpeed: 15
+  attackRange: 2
   healthPickupPrefab: {fileID: 4415941045267050123, guid: 86f4ba5fa1479294cb753fe266108632, type: 3}
-  dropChance: 0.15
-  knockbackForce: 2
-  knockbackDuration: 1
+  dropChance: 0.3
+  knockbackForce: 1
+  knockbackDuration: 0.025
 --- !u!195 &148400264648637316
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -1,46 +1,39 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour, IDamageable
-
+public class EnemyAIMelee : MonoBehaviour, IDamageable
 {
+    private PlayerAttack playerAttack;
 
- private PlayerAttack playerAttack;
     [Header("Status do Inimigo")]
     public float health = 100f;
     public int xpValue = 0;
-
+    public float attackDamage = 10f;
+    public float attackCooldown = 2f;
     public float movementSpeed = 3.5f;
 
     [Header("Detecção e Ataque")]
     public float detectionRange = 15f;
-    public float attackRange = 7f;
-    public float fireRate = 1.5f;
-
-    [Header("Projétil")]
-    public GameObject projectilePrefab;
-    public Transform firePoint;
-    public float projectileSpeed = 15f;
+    public float attackRange = 2f;
 
     [Header("Drop de Vida")]
     public GameObject healthPickupPrefab;
     [Range(0f, 1f)]
-    public float dropChance = 0.3f; // 30% de chance
+    public float dropChance = 0.3f;
 
     [Header("Knockback")]
     public float knockbackForce = 5f;
     public float knockbackDuration = 1f;
 
-    private Renderer enemyRenderer;
-    private Color originalColor;
-
-
     private Transform player;
     private NavMeshAgent agent;
     private Rigidbody rb;
-    private float fireCooldown = 0f;
+    private float attackTimer = 0f;
     private bool isKnockedBack = false;
     private float knockbackTimer = 0f;
+
+    private Renderer[] renderers;
+    private Color[] originalColors;
 
     void Start()
     {
@@ -48,11 +41,14 @@ public class EnemyAI : MonoBehaviour, IDamageable
         agent = GetComponent<NavMeshAgent>();
         agent.speed = movementSpeed;
         rb = GetComponent<Rigidbody>();
-        enemyRenderer = GetComponentInChildren<Renderer>();
-        if (enemyRenderer != null)
-        {
-            originalColor = enemyRenderer.material.color;
-        }
+
+        // Captura todos os renderers e suas cores originais
+        renderers = GetComponentsInChildren<Renderer>();
+        originalColors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+            originalColors[i] = renderers[i].material.color;
+
+        // Pega a instância de PlayerAttack para incrementar ammo e atualizar UI
         playerAttack = FindObjectOfType<PlayerAttack>();
     }
 
@@ -60,25 +56,21 @@ public class EnemyAI : MonoBehaviour, IDamageable
     {
         if (player == null) return;
 
-        // Se está em knockback, contar o tempo e não atacar
+        // Se estiver em knockback, conta o tempo, mantém agente desativado e restaura cor ao final
         if (isKnockedBack)
         {
             knockbackTimer -= Time.deltaTime;
             if (knockbackTimer <= 0f)
             {
                 isKnockedBack = false;
-               
                 agent.enabled = true;
-                 if (enemyRenderer != null)
-                {
-                    enemyRenderer.material.color = originalColor; // Restaura a cor
-                }
+                ResetColors();
             }
-            return; // Impede ações durante o knockback
+            return;
         }
 
+        // Comportamento de perseguição / ataque
         float distance = Vector3.Distance(transform.position, player.position);
-
         if (distance <= detectionRange)
         {
             if (distance > attackRange)
@@ -86,7 +78,7 @@ public class EnemyAI : MonoBehaviour, IDamageable
                 agent.isStopped = false;
                 agent.SetDestination(player.position);
             }
-            else    
+            else
             {
                 agent.isStopped = true;
                 LookAtPlayer();
@@ -98,76 +90,72 @@ public class EnemyAI : MonoBehaviour, IDamageable
             agent.isStopped = true;
         }
 
-        fireCooldown -= Time.deltaTime;
+        attackTimer -= Time.deltaTime;
     }
 
     void LookAtPlayer()
     {
-        Vector3 direction = (player.position - transform.position).normalized;
-        direction.y = 0;
-        Quaternion lookRotation = Quaternion.LookRotation(direction);
-        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 10f);
+        Vector3 dir = (player.position - transform.position).normalized;
+        dir.y = 0;
+        Quaternion rot = Quaternion.LookRotation(dir);
+        transform.rotation = Quaternion.Slerp(transform.rotation, rot, Time.deltaTime * 10f);
     }
 
     void AttackPlayer()
     {
-        if (fireCooldown <= 0f)
+        if (attackTimer <= 0f)
         {
-            GameObject projectile = Instantiate(projectilePrefab, firePoint.position, firePoint.rotation);
-            Rigidbody rbProj = projectile.GetComponent<Rigidbody>();
-
-            if (rbProj != null)
-            {
-                rbProj.velocity = firePoint.forward * projectileSpeed;
-            }
-
-            fireCooldown = fireRate;
+            PlayerHealth ph = player.GetComponent<PlayerHealth>();
+            if (ph != null) ph.TakeDamage(attackDamage);
+            attackTimer = attackCooldown;
         }
     }
 
     public void TakeDamage(float damage)
     {
         health -= damage;
+        FlashRed();
 
         if (health <= 0f)
         {
+            // Score, drop e XP
             FindObjectOfType<UIManager>().AddScore(1);
-
             if (Random.value <= dropChance && healthPickupPrefab != null)
-            {
-                Instantiate(healthPickupPrefab, transform.position + Vector3.up * 1f, Quaternion.identity);
-            }
-
+                Instantiate(healthPickupPrefab, transform.position + Vector3.up, Quaternion.identity);
             FindObjectOfType<PlayerXP>().GainXP(xpValue);
+
+            // Incrementa magic ammo e atualiza UI do player
             if (playerAttack != null)
             {
-                        playerAttack.currentMagicAmmo++;
-                        playerAttack.UpdateAmmoUI();
+                playerAttack.currentMagicAmmo++;
+                playerAttack.UpdateAmmoUI();
             }
 
-                    Destroy(gameObject);
+            Destroy(gameObject);
         }
         else
         {
-            ApplyKnockback(); // Aplica knockback quando ainda está vivo
+            ApplyKnockback();
         }
     }
 
     void ApplyKnockback()
     {
-          isKnockedBack = true;
-    knockbackTimer = knockbackDuration;
-    agent.enabled = false;
-
-    if (rb != null)
-    {
-        rb.velocity = Vector3.zero;
+        isKnockedBack = true;
+        knockbackTimer = knockbackDuration;
+        if (agent != null) agent.enabled = false;
+        if (rb != null) rb.velocity = Vector3.zero;
     }
 
-    if (enemyRenderer != null)
+    void FlashRed()
     {
-        enemyRenderer.material.color = Color.red; // Muda para vermelho
+        foreach (var rend in renderers)
+            rend.material.color = Color.red;
     }
 
+    void ResetColors()
+    {
+        for (int i = 0; i < renderers.Length; i++)
+            renderers[i].material.color = originalColors[i];
     }
 }
