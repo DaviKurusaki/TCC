@@ -13,7 +13,7 @@ public class UIManager : MonoBehaviour
 
     public void UpdateHealth(float current, float max)
     {
-        healthBar.value = current / max;
+        healthBar.value = current;
     }
 
     public void AddScore(int amount)

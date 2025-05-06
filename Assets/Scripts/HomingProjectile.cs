@@ -56,48 +56,48 @@ public class HomingProjectile : MonoBehaviour
             // Aguarda o primeiro frame para receber a direção
             return;
         }
-        else
-        {
-            Destroy(gameObject); // Nenhum alvo e nenhuma direção definida
-        }
+         else
+         {
+              Destroy(gameObject); // Nenhum alvo e nenhuma direção definida
+         }
     }
 
     void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Enemy"))
     {
-        if (projectileType == "Fire")
+        if (other.CompareTag("Enemy"))
         {
-            ApplyAreaDamage(transform.position);
-        }
-        else
-        {
-            IDamageable damageable = other.GetComponentInParent<IDamageable>();
-            if (damageable != null)
+            if (projectileType == "Fire")
             {
-                damageable.TakeDamage(damage);
+                ApplyAreaDamage(transform.position);
             }
-        }
+            else
+            {
+                IDamageable damageable = other.GetComponentInParent<IDamageable>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage(damage);
+                }
+            }
 
-        Destroy(gameObject);
+            Destroy(gameObject);
+        }
     }
-}
 
 
     void ApplyAreaDamage(Vector3 impactPosition)
-{
-    Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
-    foreach (var hitCollider in hitColliders)
     {
-        if (hitCollider.CompareTag("Enemy"))
+        Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
+        foreach (var hitCollider in hitColliders)
         {
-            IDamageable damageable = hitCollider.GetComponent<IDamageable>();
-            if (damageable != null)
+            if (hitCollider.CompareTag("Enemy"))
             {
-                damageable.TakeDamage(damage);
+                IDamageable damageable = hitCollider.GetComponent<IDamageable>();
+                if (damageable != null)
+                {
+                    damageable.TakeDamage(damage);
+                }
             }
         }
     }
-}
 
 }

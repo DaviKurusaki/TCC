@@ -64,7 +64,7 @@ public class PlayerAttack : MonoBehaviour
     void Update()
     {
         // Regen de mana/munição mágica
-        if (currentWeapon == WeaponType.Magic && currentMagicAmmo < maxMagicAmmo)
+        if ((currentWeapon == WeaponType.Magic || currentWeapon == WeaponType.Melee) && currentMagicAmmo < maxMagicAmmo)
         {
             ammoRegenTimer += Time.deltaTime;
             if (ammoRegenTimer >= ammoRegenInterval)
