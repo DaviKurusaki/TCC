@@ -87,7 +87,7 @@ public class PlayerMovement : MonoBehaviour
         // Mantém a direção atual de movimento
         dashDirection = moveDirection;
           animator.SetBool("IsDashing", true);   // Quando começa o dash
-          modelTransform.localPosition = new Vector3(0f, -1f, 0f); // afunda visualmente
+          //modelTransform.localPosition = new Vector3(0f, -1.5f, 0f); // afunda visualmente
         
     }
 
