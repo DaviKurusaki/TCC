@@ -2571,9 +2571,11 @@ MonoBehaviour:
   delay: 2
   enemyTypes:
   - prefab: {fileID: 778070227127783267, guid: 8b953108347416f46aff8c06170afbe5, type: 3}
-    spawnChance: 0.6
+    spawnChance: 0.5
   - prefab: {fileID: 778070227127783267, guid: 2da235553b8ec9a49841f72452fed6ce, type: 3}
-    spawnChance: 0.4
+    spawnChance: 0.3
+  - prefab: {fileID: 778070227127783267, guid: cace5e24c96595844b4006bbb3282744, type: 3}
+    spawnChance: 0.2
   spawnPoints:
   - {fileID: 196233167}
   - {fileID: 890300203}
@@ -4609,6 +4611,18 @@ PrefabInstance:
     m_TransformParent: {fileID: 1723651816}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.7
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
@@ -4647,6 +4661,10 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7908430260250751360, guid: 030a28b90dc4ee941a9ca6b9dec39386, type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -4760,10 +4778,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 138240111}
-  speed: 15
+  speed: 7
   dashSpeed: 20
   dashDuration: 0.2
   dashCooldown: 1
+  modelTransform: {fileID: 138240110}
 --- !u!136 &1723651813
 CapsuleCollider:
   m_ObjectHideFlags: 0

@@ -6,12 +6,15 @@ public class PlayerMovement : MonoBehaviour
     public Animator animator;           // Arraste seu Animator aqui no Inspector
     public float speed = 7f;            // Velocidade normal do jogador
     public float dashSpeed = 20f;       // Velocidade durante o dash
-    public float dashDuration = 0.2f;   // Duração do dash
+    public float dashDuration = 1f;   // Duração do dash
     public float dashCooldown = 1f;     // Tempo mínimo entre dashes
     private float dashTimeLeft = 0f;
     private float dashCooldownTimer = 0f;
     private bool isDashing = false;
     private Vector3 dashDirection;
+
+    public Transform modelTransform;  // arraste o GameObject visual aqui
+
 
     private Rigidbody rb;
     private Vector3 moveDirection;
@@ -56,7 +59,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isDashing)
         {
-            rb.velocity = dashDirection * dashSpeed;
+             Vector3 dashVelocity = dashDirection * dashSpeed;
+            dashVelocity.y = rb.velocity.y; // Mantém a gravidade funcionando
+            rb.velocity = dashVelocity;
         }
         else
         {
@@ -70,21 +75,30 @@ public class PlayerMovement : MonoBehaviour
     // Iniciar o dash
     private void StartDash()
     {
+      
         isDashing = true;
         dashTimeLeft = dashDuration;
         dashCooldownTimer = dashCooldown;
+        
 
         // Desabilita colisões para não ser empurrado
         rb.detectCollisions = false;
 
         // Mantém a direção atual de movimento
         dashDirection = moveDirection;
+          animator.SetBool("IsDashing", true);   // Quando começa o dash
+          modelTransform.localPosition = new Vector3(0f, -1f, 0f); // afunda visualmente
+        
     }
 
     // Finaliza o dash
     private void EndDash()
     {
+       
+    modelTransform.localPosition = Vector3.zero; // volta ao normal
+
         isDashing = false;
         rb.detectCollisions = true;
+         animator.SetBool("IsDashing", false);  // Quando termina o dash
     }
 }
