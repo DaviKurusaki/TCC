@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class PlayerAttack : MonoBehaviour
 {
+
+    //Seletor do tipo de arma para o animator
+    private int weaponEquipped = 0;
+    
+    public Animator animator;
+
     [Header("UI Config")]
     [SerializeField] private MagicAmmoUI magicAmmoUI;
 
@@ -59,6 +65,7 @@ public class PlayerAttack : MonoBehaviour
         currentMagicAmmo = maxMagicAmmo;
         ammoRegenTimer = 0f;
         UpdateAmmoUI();
+        animator.SetInteger("WeaponType",weaponEquipped);
     }
 
     void Update()
@@ -104,6 +111,7 @@ public class PlayerAttack : MonoBehaviour
             swordObject.SetActive(true);
             BackPistolObject.SetActive(true);
             BackSwordObject.SetActive(false);
+            EquipWeapon(1);
         }
         else
         {
@@ -112,7 +120,14 @@ public class PlayerAttack : MonoBehaviour
             swordObject.SetActive(false);
             BackPistolObject.SetActive(false);
             BackSwordObject.SetActive(true);
+            EquipWeapon(0);
         }
+    }
+
+    void EquipWeapon(int WeaponType)
+    {
+        weaponEquipped = WeaponType;
+        animator.SetInteger("WeaponType", WeaponType);
     }
 
     void ShootMagic()
