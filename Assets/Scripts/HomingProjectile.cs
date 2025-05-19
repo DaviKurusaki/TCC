@@ -4,7 +4,7 @@ public class HomingProjectile : MonoBehaviour
 {
     public float speed = 20f;
     public float lifeTime = 5f;
-    public float areaRadius = 5f;
+    public float areaRadius = 2f;
 
     private float damage;
     private Transform target;
@@ -63,41 +63,55 @@ public class HomingProjectile : MonoBehaviour
     }
 
     void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Enemy"))
-        {
-            if (projectileType == "Fire")
-            {
-                ApplyAreaDamage(transform.position);
-            }
-            else
-            {
-                IDamageable damageable = other.GetComponentInParent<IDamageable>();
-                if (damageable != null)
-                {
-                    damageable.TakeDamage(damage);
-                }
-            }
+{
 
-            Destroy(gameObject);
+        if (other.CompareTag("Props"))
+        {
+        Destroy(gameObject);
         }
-    }
 
-
-    void ApplyAreaDamage(Vector3 impactPosition)
+    if (other.CompareTag("Enemy"))
     {
-        Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
-        foreach (var hitCollider in hitColliders)
+        if (projectileType == "Fire")
         {
-            if (hitCollider.CompareTag("Enemy"))
+            // Dano total no inimigo atingido diretamente
+            IDamageable mainTarget = other.GetComponentInParent<IDamageable>();
+            if (mainTarget != null)
             {
-                IDamageable damageable = hitCollider.GetComponent<IDamageable>();
-                if (damageable != null)
-                {
-                    damageable.TakeDamage(damage);
-                }
+                mainTarget.TakeDamage(damage);
+            }
+
+            // Aplica 50% de dano em outros inimigos próximos
+            ApplyAreaDamage(transform.position, other);
+        }
+        else
+        {
+            IDamageable damageable = other.GetComponentInParent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(damage);
             }
         }
+
+        Destroy(gameObject);
     }
+}
+
+void ApplyAreaDamage(Vector3 impactPosition, Collider mainTarget)
+{
+    Collider[] hitColliders = Physics.OverlapSphere(impactPosition, areaRadius);
+    foreach (var hitCollider in hitColliders)
+    {
+        if (hitCollider.CompareTag("Enemy") && hitCollider != mainTarget)
+        {
+            IDamageable damageable = hitCollider.GetComponent<IDamageable>();
+            if (damageable != null)
+            {
+                damageable.TakeDamage(damage / 2f);
+            }
+        }
+    }
+}
+
 
 }

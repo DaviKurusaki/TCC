@@ -174,7 +174,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e24a5fc976ceb2d4c869eec3bd6cf5b4, type: 2}
+  - {fileID: 2100000, guid: 99b23022d3a77b644b274d0abf3ad673, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -270,9 +270,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 5
-  freezeTime: 2
-  speed: 25
+  freezeTime: 5
+  speed: 20
   lifeTime: 3
+  freezeChance: 0.8
 --- !u!1 &6495606640712971833
 GameObject:
   m_ObjectHideFlags: 0

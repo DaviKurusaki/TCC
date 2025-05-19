@@ -37,8 +37,22 @@ public class PlayerAttack : MonoBehaviour
     [Header("Magic Ammo System")]
     public int maxMagicAmmo = 6;
     public int currentMagicAmmo;
-    public float ammoRegenInterval = 1f;
+    public float ammoRegenInterval;
     private float ammoRegenTimer;
+    [Header("Ammo Regen Per Mage Type")]
+    public float regenBasic = 3.0f;
+    public float regenFire = 6f;
+    public float regenIce = 4f;
+    public float regenLightning = 5f;
+
+    [Header("Cooldown Settings")]
+    public float magicCooldown = 0.05f;
+    public float meleeCooldown = 0.1f;
+
+    private float magicCooldownTimer = 0f;
+    private float meleeCooldownTimer = 0f;
+
+
 
     // ------------------------------
     // Código para a espada (Melee)
@@ -49,7 +63,7 @@ public class PlayerAttack : MonoBehaviour
     public WeaponType currentWeapon = WeaponType.Magic;
 
     public float meleeRange = 2f;     // Alcance do ataque com espada
-    public float meleeDamage = 10f;   // Dano da espada
+    public float meleeDamage = 15f;   // Dano da espada
 
     // ------------------------------
     // Código para armas guardadas
@@ -68,13 +82,33 @@ public class PlayerAttack : MonoBehaviour
         animator.SetInteger("WeaponType",weaponEquipped);
     }
 
+    float GetRegenIntervalByMageType(MageType type)
+{
+    switch (type)
+    {
+        case MageType.Fire: return regenFire;
+        case MageType.Ice: return regenIce;
+        case MageType.Lightning: return regenLightning;
+        default: return regenBasic;
+    }
+}
+
     void Update()
     {
+
+        if (magicCooldownTimer > 0f)
+        magicCooldownTimer -= Time.deltaTime;
+
+    if (meleeCooldownTimer > 0f)
+        meleeCooldownTimer -= Time.deltaTime;
+
         // Regen de mana/munição mágica
         if ((currentWeapon == WeaponType.Magic || currentWeapon == WeaponType.Melee) && currentMagicAmmo < maxMagicAmmo)
         {
             ammoRegenTimer += Time.deltaTime;
-            if (ammoRegenTimer >= ammoRegenInterval)
+            float currentRegenRate = GetRegenIntervalByMageType(currentMage);
+            if (ammoRegenTimer >= currentRegenRate)
+
             {
                 currentMagicAmmo++;
                 ammoRegenTimer = 0f;
@@ -91,16 +125,19 @@ public class PlayerAttack : MonoBehaviour
         // Ataque (botão esquerdo do mouse)
         if (Input.GetButtonDown("Fire1"))
         {
-            if (currentWeapon == WeaponType.Magic)
+            if (currentWeapon == WeaponType.Magic && magicCooldownTimer <= 0f)
             {
+                animator.SetTrigger("Attack");
                 ShootMagic();
+                magicCooldownTimer = magicCooldown;
             }
-            else if (currentWeapon == WeaponType.Melee)
+            else if (currentWeapon == WeaponType.Melee && meleeCooldownTimer <= 0f)
             {
+                animator.SetTrigger("Attack");
                 PerformMeleeAttack();
+                meleeCooldownTimer = meleeCooldown;
             }
         }
-    }
 
     void ToggleWeapon()
     {
@@ -225,6 +262,7 @@ public class PlayerAttack : MonoBehaviour
         }
 
         return closest;
+    }
     }
 
     public void SetMageType(MageType newType)

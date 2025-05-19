@@ -24,6 +24,12 @@ public class EnemyProjectile : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
+
+         if (other.CompareTag("Props"))
+        {
+        Destroy(gameObject);
+        }
+
         if (other.CompareTag("Player"))
         {
             PlayerHealth player = other.GetComponent<PlayerHealth>(); // Certifique-se que existe esse script

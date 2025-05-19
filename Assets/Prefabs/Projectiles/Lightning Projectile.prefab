@@ -32,7 +32,7 @@ Transform:
   m_GameObject: {fileID: 574750843465924099}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.9989475, y: -1.1189746, z: 0}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -173,7 +173,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e24a5fc976ceb2d4c869eec3bd6cf5b4, type: 2}
+  - {fileID: 2100000, guid: b226a68f978ed2b4ca293f75f1b9417a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -270,10 +270,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   damage: 8
   chainRange: 5
-  maxChains: 3
+  chainsLeft: 3
   speed: 35
   lifeTime: 3
-  lightningEffectPrefab: {fileID: 2578062944394666014, guid: 133b58ff488877b478e17159a98c78a8, type: 3}
+  lightningEffectPrefab: {fileID: 4791090970065297742, guid: 100d7b70ed1483541b07dfd6ae89a392, type: 3}
+  projectilePrefab: {fileID: 574750843465924099}
 --- !u!1 &2487020978327005785
 GameObject:
   m_ObjectHideFlags: 0

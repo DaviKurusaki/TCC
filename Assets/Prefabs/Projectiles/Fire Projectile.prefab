@@ -173,7 +173,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e24a5fc976ceb2d4c869eec3bd6cf5b4, type: 2}
+  - {fileID: 2100000, guid: 434f85f140412894bb069c12347cde95, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -269,7 +269,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damage: 10
-  explosionRadius: 3
+  explosionRadius: 1
   speed: 10
   lifeTime: 3
   explosionEffectPrefab: {fileID: 7231471297740982709, guid: 96bca0fdf82073346b48c76ee1e0744b, type: 3}

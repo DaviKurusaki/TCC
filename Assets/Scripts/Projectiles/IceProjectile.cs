@@ -6,6 +6,7 @@ public class IceProjectile : MonoBehaviour
     public float freezeTime = 2f;
     public float speed = 20f;
     public float lifeTime = 3f;
+    public float freezeChance = 0.3f;
 
     void Start()
     {
@@ -21,27 +22,57 @@ public class IceProjectile : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
-            EnemyAI enemy = other.GetComponent<EnemyAI>();
-            if (enemy != null)
+            EnemyAI enemyAI = other.GetComponent<EnemyAI>();
+            if (enemyAI != null)
             {
-                enemy.TakeDamage(damage);
-                StartCoroutine(FreezeEnemy(enemy));
+                ApplyEffectToEnemyAI(enemyAI);
+            }
+            else
+            {
+                EnemyAIMelee enemyAIMelee = other.GetComponent<EnemyAIMelee>();
+                if (enemyAIMelee != null)
+                {
+                    ApplyEffectToEnemyAIMelee(enemyAIMelee);
+                }
             }
         }
 
         Destroy(gameObject);
     }
 
-    System.Collections.IEnumerator FreezeEnemy(EnemyAI enemy)
-{
-    UnityEngine.AI.NavMeshAgent agent = enemy.GetComponent<UnityEngine.AI.NavMeshAgent>();
-    if (agent != null)
+    void ApplyEffectToEnemyAI(EnemyAI enemy)
     {
-        float originalSpeed = agent.speed;
-        agent.speed = originalSpeed * 0.3f; // Reduz pra 30% da velocidade
-        yield return new WaitForSeconds(freezeTime);
-        agent.speed = originalSpeed;
-    }
-}
+        bool isFrozen = Random.value <= freezeChance;
 
+        if (isFrozen)
+        {
+            Debug.Log("CONGELADO! Dano dobrado!");
+            enemy.Freeze(freezeTime);
+            enemy.TakeDamage(damage * 2f);
+        }
+        else
+        {
+            Debug.Log("Não congelou! Apenas lentidão.");
+            enemy.Slow(freezeTime);
+            enemy.TakeDamage(damage);
+        }
+    }
+
+    void ApplyEffectToEnemyAIMelee(EnemyAIMelee enemy)
+    {
+        bool isFrozen = Random.value <= freezeChance;
+
+        if (isFrozen)
+        {
+            Debug.Log("CONGELADO! Dano dobrado!");
+            enemy.Freeze(freezeTime);
+            enemy.TakeDamage(damage * 2f);
+        }
+        else
+        {
+            Debug.Log("Não congelou! Apenas lentidão.");
+            enemy.Slow(freezeTime);
+            enemy.TakeDamage(damage);
+        }
+    }
 }

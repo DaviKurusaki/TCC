@@ -3,21 +3,21 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
 {
-    public Animator animator;           // Arraste seu Animator aqui no Inspector
-    public float speed = 7f;            // Velocidade normal do jogador
-    public float dashSpeed = 20f;       // Velocidade durante o dash
-    public float dashDuration = 1f;   // Duração do dash
-    public float dashCooldown = 1f;     // Tempo mínimo entre dashes
+    public Animator animator;              // Arraste seu Animator aqui no Inspector
+    public float speed = 7f;               // Velocidade normal do jogador
+    public float dashSpeed = 20f;          // Velocidade durante o dash
+    public float dashDuration = 1f;        // Duração do dash
+    public float dashCooldown = 1f;        // Tempo mínimo entre dashes
+    public Transform modelTransform;       // Arraste o GameObject visual aqui
+
     private float dashTimeLeft = 0f;
     private float dashCooldownTimer = 0f;
     private bool isDashing = false;
     private Vector3 dashDirection;
-
-    public Transform modelTransform;  // arraste o GameObject visual aqui
-
-
     private Rigidbody rb;
     private Vector3 moveDirection;
+
+    public bool canMove = true;
 
     void Start()
     {
@@ -26,16 +26,22 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        // 1) Ler input de movimento (WASD ou Setas)
+        if (!canMove)
+        {
+            animator.SetBool("IsRunning", false);
+            return;
+        }
+
+        // Captura input
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
         moveDirection = new Vector3(moveX, 0f, moveZ).normalized;
 
-        // 2) Verificar se o jogador está se movendo e atualizar o parâmetro IsRunning
+        // Atualiza animação de corrida
         bool isMoving = moveDirection.magnitude > 0.1f;
-        animator.SetBool("IsRunning", isMoving);  // Atualiza o parâmetro IsRunning no Animator
+        animator.SetBool("IsRunning", isMoving);
 
-        // 3) Atualizar timers do dash
+        // Atualiza cooldown do dash
         if (dashCooldownTimer > 0f)
             dashCooldownTimer -= Time.deltaTime;
 
@@ -47,7 +53,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // 4) Iniciar dash se pressionar Shift, movimento estiver ativo e cooldown expirado
+            // Inicia o dash
             if (Input.GetKeyDown(KeyCode.LeftShift) && isMoving && dashCooldownTimer <= 0f)
             {
                 StartDash();
@@ -59,46 +65,35 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isDashing)
         {
-             Vector3 dashVelocity = dashDirection * dashSpeed;
-            dashVelocity.y = rb.velocity.y; // Mantém a gravidade funcionando
+            Vector3 dashVelocity = dashDirection * dashSpeed;
+            dashVelocity.y = rb.velocity.y; // Mantém a gravidade
             rb.velocity = dashVelocity;
         }
         else
         {
-            // 5) Movimento normal com velocidade ajustada
             Vector3 velocity = moveDirection * speed;
-            velocity.y = rb.velocity.y; // Mantém a gravidade funcionando
+            velocity.y = rb.velocity.y; // Mantém a gravidade
             rb.velocity = velocity;
         }
     }
 
-    // Iniciar o dash
     private void StartDash()
     {
-      
         isDashing = true;
         dashTimeLeft = dashDuration;
         dashCooldownTimer = dashCooldown;
-        
 
-        // Desabilita colisões para não ser empurrado
-        rb.detectCollisions = false;
-
-        // Mantém a direção atual de movimento
-        dashDirection = moveDirection;
-          animator.SetBool("IsDashing", true);   // Quando começa o dash
-          //modelTransform.localPosition = new Vector3(0f, -1.5f, 0f); // afunda visualmente
-        
+        rb.detectCollisions = false;               // Desliga colisões temporariamente
+        dashDirection = moveDirection;             // Mantém a direção atual
+        animator.SetBool("IsDashing", true);       // Liga animação de dash
+        // modelTransform.localPosition = new Vector3(0f, -1.5f, 0f); // Visual opcional
     }
 
-    // Finaliza o dash
     private void EndDash()
     {
-       
-    modelTransform.localPosition = Vector3.zero; // volta ao normal
-
+        modelTransform.localPosition = Vector3.zero; // Reseta posição visual (opcional)
         isDashing = false;
         rb.detectCollisions = true;
-         animator.SetBool("IsDashing", false);  // Quando termina o dash
+        animator.SetBool("IsDashing", false);        // Desliga animação de dash
     }
 }

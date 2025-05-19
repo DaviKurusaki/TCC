@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class EnemyAIMelee : MonoBehaviour, IDamageable
 {
@@ -35,28 +36,51 @@ public class EnemyAIMelee : MonoBehaviour, IDamageable
     private Renderer[] renderers;
     private Color[] originalColors;
 
+    private bool isFrozen = false;
+ 
+    private float originalSpeed;
+    private float freezeTimer = 0f;
+    private Coroutine freezeCoroutine;
+    private Coroutine slowCoroutine;
+
     void Start()
     {
+
+        originalSpeed = movementSpeed;
+
         player = GameObject.FindGameObjectWithTag("Player").transform;
         agent = GetComponent<NavMeshAgent>();
         agent.speed = movementSpeed;
+        originalSpeed = movementSpeed;
         rb = GetComponent<Rigidbody>();
 
-        // Captura todos os renderers e suas cores originais
         renderers = GetComponentsInChildren<Renderer>();
         originalColors = new Color[renderers.Length];
         for (int i = 0; i < renderers.Length; i++)
             originalColors[i] = renderers[i].material.color;
 
-        // Pega a instância de PlayerAttack para incrementar ammo e atualizar UI
         playerAttack = FindObjectOfType<PlayerAttack>();
     }
 
     void Update()
     {
-        if (player == null) return;
 
-        // Se estiver em knockback, conta o tempo, mantém agente desativado e restaura cor ao final
+        if (isFrozen)
+        {
+            freezeTimer -= Time.deltaTime;
+            if (freezeTimer <= 0f)
+            {
+                isFrozen = false;
+                agent.isStopped = false;
+                movementSpeed = originalSpeed;
+                agent.speed = originalSpeed;
+                ResetColors();
+            }
+            return;
+        }
+
+        if (player == null || isFrozen) return;
+
         if (isKnockedBack)
         {
             knockbackTimer -= Time.deltaTime;
@@ -69,7 +93,6 @@ public class EnemyAIMelee : MonoBehaviour, IDamageable
             return;
         }
 
-        // Comportamento de perseguição / ataque
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance <= detectionRange)
         {
@@ -114,17 +137,16 @@ public class EnemyAIMelee : MonoBehaviour, IDamageable
     public void TakeDamage(float damage)
     {
         health -= damage;
+        if (!isFrozen) // Só pisca vermelho se não estiver congelado
         FlashRed();
 
         if (health <= 0f)
         {
-            // Score, drop e XP
             FindObjectOfType<UIManager>().AddScore(1);
             if (Random.value <= dropChance && healthPickupPrefab != null)
                 Instantiate(healthPickupPrefab, transform.position + Vector3.up, Quaternion.identity);
             FindObjectOfType<PlayerXP>().GainXP(xpValue);
 
-            // Incrementa magic ammo e atualiza UI do player
             if (playerAttack != null)
             {
                 playerAttack.currentMagicAmmo++;
@@ -157,5 +179,66 @@ public class EnemyAIMelee : MonoBehaviour, IDamageable
     {
         for (int i = 0; i < renderers.Length; i++)
             renderers[i].material.color = originalColors[i];
+    }
+
+    // Congelar inimigo por duração
+    public void Freeze(float duration)
+    {
+        isFrozen = true;
+        freezeTimer = duration;
+        agent.isStopped = true;
+        agent.velocity = Vector3.zero;
+        movementSpeed = 0f;
+
+        foreach (var rend in renderers)
+        rend.material.color = Color.cyan; // Azul claro para congelado
+
+        if (freezeCoroutine != null)
+            StopCoroutine(freezeCoroutine);
+
+        freezeCoroutine = StartCoroutine(FreezeRoutine(duration));
+    }
+
+    private IEnumerator FreezeRoutine(float duration)
+    {
+        isFrozen = true;
+        agent.isStopped = true;
+        originalSpeed = agent.speed;
+        agent.speed = 0f;
+
+        // Opcional: muda cor para azul para indicar congelamento
+        foreach (var rend in renderers)
+            rend.material.color = Color.cyan;
+
+        yield return new WaitForSeconds(duration);
+
+        agent.speed = originalSpeed;
+        agent.isStopped = false;
+        isFrozen = false;
+        ResetColors();
+    }
+
+    // Lentidão do inimigo por duração
+    public void Slow(float duration)
+    {
+        if (slowCoroutine != null)
+            StopCoroutine(slowCoroutine);
+
+        slowCoroutine = StartCoroutine(SlowRoutine(duration));
+    }
+
+    private IEnumerator SlowRoutine(float duration)
+    {
+        float slowedSpeed = originalSpeed * 0.5f; // Exemplo: reduz para 50%
+        agent.speed = slowedSpeed;
+
+        // Opcional: muda cor para azul claro para indicar lentidão
+        foreach (var rend in renderers)
+            rend.material.color = Color.blue;
+
+        yield return new WaitForSeconds(duration);
+
+        agent.speed = originalSpeed;
+        ResetColors();
     }
 }

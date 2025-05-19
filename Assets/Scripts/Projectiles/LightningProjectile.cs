@@ -5,12 +5,13 @@ public class LightningProjectile : MonoBehaviour
 {
     public float damage = 10f;
     public float chainRange = 4f;
-    public int maxChains = 3;
+    public int chainsLeft = 3;
     public float speed = 20f;
     public float lifeTime = 3f;
     public GameObject lightningEffectPrefab;
+    public GameObject projectilePrefab;
 
-    private List<Transform> alreadyHit = new List<Transform>();
+    private Transform target;
 
     void Start()
     {
@@ -24,52 +25,56 @@ public class LightningProjectile : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Enemy"))
-        {
-            alreadyHit.Add(other.transform);
-            StartCoroutine(ChainLightning(other.transform, maxChains));
-            Destroy(gameObject); // destrói o projétil base
-        }
-    }
+        if (!other.CompareTag("Enemy")) return;
 
-    System.Collections.IEnumerator ChainLightning(Transform currentTarget, int chainsLeft)
-    {
-        if (chainsLeft <= 0 || currentTarget == null)
-            yield break;
-
-        EnemyAI enemy = currentTarget.GetComponent<EnemyAI>();
+        // Aplica dano
+        EnemyAI enemy = other.GetComponent<EnemyAI>();
         if (enemy != null)
             enemy.TakeDamage(damage);
 
-        // Cria o efeito visual
+        // Efeito visual
         if (lightningEffectPrefab != null)
+            Instantiate(lightningEffectPrefab, other.transform.position + Vector3.up, Quaternion.identity);
+
+        // Procura próximo alvo e cria novo projétil
+        if (chainsLeft > 0)
         {
-            Instantiate(lightningEffectPrefab, currentTarget.position + Vector3.up, Quaternion.identity);
+            Transform nextTarget = FindNextTarget(other.transform);
+            if (nextTarget != null)
+            {
+                Vector3 spawnPos = other.transform.position + Vector3.up * 0.5f;
+
+                GameObject newProj = Instantiate(projectilePrefab, spawnPos, Quaternion.LookRotation(nextTarget.position - spawnPos));
+                LightningProjectile projScript = newProj.GetComponent<LightningProjectile>();
+                projScript.damage = damage * 0.5f;
+                projScript.chainsLeft = chainsLeft - 1;
+                projScript.projectilePrefab = projectilePrefab; // mantém referência
+                projScript.lightningEffectPrefab = lightningEffectPrefab;
+            }
         }
 
-        yield return new WaitForSeconds(0.2f); // pequeno delay visual
+        Destroy(gameObject); // destrói o projétil atual
+    }
 
-        Collider[] hitColliders = Physics.OverlapSphere(currentTarget.position, chainRange);
-        Transform nextTarget = null;
+    Transform FindNextTarget(Transform currentTarget)
+    {
+        Collider[] hits = Physics.OverlapSphere(currentTarget.position, chainRange);
+        Transform closest = null;
         float closestDistance = Mathf.Infinity;
 
-        foreach (Collider hit in hitColliders)
+        foreach (Collider hit in hits)
         {
-            if (hit.CompareTag("Enemy") && !alreadyHit.Contains(hit.transform))
+            if (hit.CompareTag("Enemy") && hit.transform != currentTarget)
             {
                 float dist = Vector3.Distance(currentTarget.position, hit.transform.position);
                 if (dist < closestDistance)
                 {
                     closestDistance = dist;
-                    nextTarget = hit.transform;
+                    closest = hit.transform;
                 }
             }
         }
 
-        if (nextTarget != null)
-        {
-            alreadyHit.Add(nextTarget);
-            StartCoroutine(ChainLightning(nextTarget, chainsLeft - 1));
-        }
+        return closest;
     }
 }

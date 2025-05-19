@@ -17,7 +17,6 @@ public class Spawner : MonoBehaviour
     public GameObject IcePickup;
     public GameObject LightningPickup;
 
-
     [Header("Partícula de Spawn")]
     public GameObject efeitoParticulas;
     public float delay = 2f;
@@ -34,7 +33,7 @@ public class Spawner : MonoBehaviour
     public int totalWaves = 5;
 
     [Header("Boss Settings")]
-    public GameObject bossPrefab;
+    public GameObject[] bossPrefabs;
     public Transform bossSpawnPoint;
 
     private int currentWave = 0;
@@ -49,30 +48,22 @@ public class Spawner : MonoBehaviour
 
     void Update()
     {
-        if (currentWave == 2)
-        {
-            FirePickup.SetActive(true);
-        }
-        if (currentWave == 3)
-        {
-            IcePickup.SetActive(true);
-        }
-        if (currentWave == 4)
-        {
-            LightningPickup.SetActive(true);
-        }
+        // Ativa pickups por wave
+        if (currentWave == 2) FirePickup.SetActive(true);
+        if (currentWave == 3) IcePickup.SetActive(true);
+        if (currentWave == 4) LightningPickup.SetActive(true);
 
         currentEnemies.RemoveAll(enemy => enemy == null);
 
         if (currentEnemies.Count == 0 && !isSpawning)
         {
-            if (currentWave < totalWaves)
+            if (!bossSpawned)
             {
-                StartCoroutine(SpawnWave());
+                SpawnBoss(); // Spawna o boss da wave atual
             }
-            else if (!bossSpawned)
+            else if (currentWave < totalWaves)
             {
-                SpawnBoss();
+                StartCoroutine(SpawnWave()); // Vai pra próxima wave
             }
         }
     }
@@ -80,6 +71,7 @@ public class Spawner : MonoBehaviour
     IEnumerator SpawnWave()
     {
         isSpawning = true;
+        bossSpawned = false;
 
         yield return new WaitForSeconds(timeBetweenWaves);
 
@@ -105,34 +97,38 @@ public class Spawner : MonoBehaviour
             }
         }
 
-        
-
         isSpawning = false;
     }
 
     void SpawnBoss()
     {
-        if (bossPrefab != null && bossSpawnPoint != null)
-        {
-            GameObject efeito = Instantiate(efeitoParticulas, bossSpawnPoint.position, Quaternion.identity);
-            Destroy(efeito, delay);
+        int bossIndex = currentWave - 1;
 
-            StartCoroutine(SpawnBossWithDelay());
+        if (bossIndex < bossPrefabs.Length && bossSpawnPoint != null)
+        {
+            GameObject bossToSpawn = bossPrefabs[bossIndex];
+
+            if (bossToSpawn != null)
+            {
+                GameObject efeito = Instantiate(efeitoParticulas, bossSpawnPoint.position, Quaternion.identity);
+                Destroy(efeito, delay);
+                StartCoroutine(SpawnBossWithDelay(bossToSpawn));
+            }
         }
         else
         {
-            Debug.LogError("[Spawner] BossPrefab ou BossSpawnPoint não configurados!");
+            Debug.LogWarning($"[Spawner] Nenhum boss configurado para a wave {currentWave}.");
         }
 
         bossSpawned = true;
     }
 
-    IEnumerator SpawnBossWithDelay()
+    IEnumerator SpawnBossWithDelay(GameObject bossPrefab)
     {
         yield return new WaitForSeconds(delay);
         GameObject boss = Instantiate(bossPrefab, bossSpawnPoint.position, Quaternion.identity);
         currentEnemies.Add(boss);
-        Debug.Log("Boss spawned!");
+        Debug.Log($"Boss da Wave {currentWave} spawned!");
     }
 
     GameObject GetRandomEnemy()

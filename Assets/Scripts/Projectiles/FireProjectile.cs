@@ -3,46 +3,55 @@ using UnityEngine;
 public class FireProjectile : MonoBehaviour
 {
     public float damage = 10f;
-    public float explosionRadius = 3f;
+    public float explosionRadius = 2f;
     public float speed = 20f;
     public float lifeTime = 3f;
-    public GameObject explosionEffectPrefab;  // Prefab do efeito de explosão
+    public GameObject explosionEffectPrefab;
 
     void Start()
     {
-        Destroy(gameObject, lifeTime);  // Destroi o projétil após o tempo de vida
+        Destroy(gameObject, lifeTime);
     }
 
     void Update()
     {
-        transform.Translate(Vector3.forward * speed * Time.deltaTime);  // Movimenta o projétil para frente
+        transform.Translate(Vector3.forward * speed * Time.deltaTime);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Aplica dano na área de explosão
+        EnemyAI mainTarget = null;
+
+        if (other.CompareTag("Enemy"))
+        {
+            mainTarget = other.GetComponent<EnemyAI>();
+            if (mainTarget != null)
+            {
+                mainTarget.TakeDamage(damage); // Dano total no alvo direto
+            }
+        }
+
+        // Aplica dano em área (metade) para os inimigos próximos, exceto o atingido
         Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius);
         foreach (Collider hit in hitColliders)
         {
-            if (hit.CompareTag("Enemy"))
+            if (hit.CompareTag("Enemy") && hit != other)
             {
-                // Verifica se o inimigo tem o componente EnemyAI antes de tentar aplicar dano
                 EnemyAI enemyAI = hit.GetComponent<EnemyAI>();
                 if (enemyAI != null)
                 {
-                    enemyAI.TakeDamage(damage);  // Aplica dano no inimigo
+                    enemyAI.TakeDamage(damage / 2f); // Dano reduzido em área
                 }
             }
         }
 
-        // Instancia o efeito de explosão na posição do projétil ao ser destruído
+        // Efeito de explosão
         if (explosionEffectPrefab != null)
         {
-            // Instancia o efeito de explosão na posição atual do projétil
             GameObject explosion = Instantiate(explosionEffectPrefab, transform.position, Quaternion.identity);
-            Destroy(explosion, 2f);  // Destroi o efeito de explosão após 2 segundos
+            Destroy(explosion, 2f);
         }
 
-        Destroy(gameObject);  // Destroi o projétil após a colisão
+        Destroy(gameObject);
     }
 }
